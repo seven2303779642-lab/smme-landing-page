@@ -19,8 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${bebasNeue.variable} ${bebasNeue.className} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${bebasNeue.variable} ${bebasNeue.className} antialiased`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

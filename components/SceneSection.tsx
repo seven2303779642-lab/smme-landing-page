@@ -9,6 +9,13 @@ type SceneSectionProps = {
   scene: SceneItem;
 };
 
+type SceneTextContentProps = {
+  scene: SceneItem;
+  accent: ReturnType<typeof getAccentClasses>;
+  isInView: boolean;
+  lastLineIndex: number;
+};
+
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
@@ -20,6 +27,7 @@ function getAccentClasses(accent: SceneItem["accent"]) {
       label: "text-gold",
       divider: "bg-gold",
       lastLine: "text-gold",
+      subtitle: "text-white/55 md:text-white/65",
       ctaBorder: "border-gold/50 hover:border-gold hover:bg-gold/10",
     };
   }
@@ -28,27 +36,132 @@ function getAccentClasses(accent: SceneItem["accent"]) {
     label: "text-purple-accent",
     divider: "bg-purple-accent",
     lastLine: "text-purple-accent",
+    subtitle: "text-purple-accent",
     ctaBorder:
       "border-purple-accent/50 hover:border-purple-accent hover:bg-purple-accent/10",
+  };
+}
+
+function getMobileVerticalDividerStyle(accent: SceneItem["accent"]) {
+  const rgb = accent === "gold" ? "196, 163, 90" : "168, 85, 247";
+
+  return {
+    background: `linear-gradient(to bottom, rgba(${rgb}, 0) 0%, rgba(${rgb}, 1) 14%, rgba(${rgb}, 1) 86%, rgba(${rgb}, 0) 100%)`,
   };
 }
 
 function CtaArrow() {
   return (
     <svg
-      width="10"
-      height="10"
+      width="22"
+      height="22"
       viewBox="0 0 14 14"
       fill="none"
       aria-hidden="true"
-      className="shrink-0"
+      className="block shrink-0 text-purple-accent"
     >
       <path
         d="M1 7H12M12 7L7 2M12 7L7 12"
         stroke="currentColor"
-        strokeWidth="1"
+        strokeWidth="1.5"
       />
     </svg>
+  );
+}
+
+function SceneTextContent({
+  scene,
+  accent,
+  isInView,
+  lastLineIndex,
+}: SceneTextContentProps) {
+  return (
+    <>
+      <motion.p
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        variants={fadeUpVariants}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className={`text-[1.05rem] font-semibold leading-none tracking-[0.18em] uppercase md:text-[1.55rem] ${accent.label}`}
+      >
+        {scene.label}
+      </motion.p>
+
+      <motion.div
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        variants={fadeUpVariants}
+        transition={{ duration: 0.6, delay: 0.15 }}
+        className={`mt-4 mb-8 h-[2px] w-12 md:mt-4 md:mb-10 md:w-14 ${accent.divider}`}
+      />
+
+      <motion.h2
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        variants={fadeUpVariants}
+        transition={{ duration: 0.7, delay: 0.2 }}
+        className="mb-4 text-[clamp(1.75rem,6vw,2.625rem)] leading-[clamp(1.625rem,5.8vw,2.5rem)] tracking-[1px] uppercase md:mb-6 md:text-[clamp(3.8rem,4.8vw,5.8rem)] md:leading-[0.88]"
+      >
+        {scene.titleLines.map((line, index) => (
+          <span
+            key={line}
+            className={`block md:whitespace-nowrap ${
+              index === lastLineIndex ? accent.lastLine : "text-white"
+            }`}
+          >
+            {line}
+          </span>
+        ))}
+      </motion.h2>
+
+      <motion.p
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        variants={fadeUpVariants}
+        transition={{ duration: 0.7, delay: 0.35 }}
+        className={`text-[1.2rem] leading-snug tracking-[3px] uppercase md:tracking-[0.22em] ${
+          scene.subtitleAccentPrefix
+            ? "text-white/55 md:text-white/65"
+            : accent.subtitle
+        }`}
+      >
+        {scene.subtitleAccentPrefix ? (
+          <>
+            <span className="text-purple-accent">
+              {scene.subtitleAccentPrefix}
+            </span>
+            {scene.subtitle.slice(scene.subtitleAccentPrefix.length)}
+          </>
+        ) : (
+          scene.subtitle
+        )}
+      </motion.p>
+
+      {scene.cta && (
+        <motion.div
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={fadeUpVariants}
+          transition={{ duration: 0.7, delay: 0.5 }}
+          className="mt-6 md:mt-8"
+        >
+          <motion.a
+            href="#"
+            whileHover={{ scale: 1.02, opacity: 0.9 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="inline-flex h-12 items-center gap-3 rounded border border-purple-accent bg-transparent px-4 text-[0.95rem] leading-none tracking-[0.18em] text-white uppercase transition-colors hover:bg-purple-accent/10 md:h-14 md:gap-5 md:px-8 md:text-[1.2rem]"
+          >
+            <span className="inline-block translate-y-[2px] leading-none">
+              {scene.cta}
+            </span>
+            <span className="inline-flex translate-y-[1px] items-center leading-none">
+              <CtaArrow />
+            </span>
+          </motion.a>
+        </motion.div>
+      )}
+    </>
   );
 }
 
@@ -65,144 +178,108 @@ export default function SceneSection({ scene }: SceneSectionProps) {
       return;
     }
 
+    const syncInView = () => {
+      const rect = node.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      if (rect.top < viewportHeight * 0.75 && rect.bottom > viewportHeight * 0.25) {
+        setIsInView(true);
+      }
+    };
+
+    syncInView();
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
         }
       },
-      { threshold: 0.4 },
+      { threshold: 0.35 },
     );
 
     observer.observe(node);
+    window.addEventListener("resize", syncInView);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncInView);
+    };
   }, []);
 
   return (
     <section
       ref={sectionRef}
       data-scene-id={scene.id}
-      className="relative h-screen min-h-[100svh] snap-always snap-start overflow-hidden"
+      className="relative h-screen min-h-[100svh] snap-always snap-start overflow-hidden bg-black"
     >
-      {/* Background image: mobile below md, desktop from md up */}
-      <div className="absolute inset-0">
+      {/* Desktop */}
+      <div className="relative hidden h-full min-h-[100svh] md:block">
         <Image
           src={scene.image}
           alt=""
           fill
           priority={scene.id <= 2}
           sizes="100vw"
-          className={`object-cover object-center ${
-            scene.mobileImage ? "hidden md:block" : ""
-          }`}
+          className="object-cover object-center"
         />
-        {scene.mobileImage && (
-          <Image
-            src={scene.mobileImage}
-            alt=""
-            fill
-            priority={scene.id <= 2}
-            sizes="100vw"
-            className="object-cover object-center md:hidden"
-          />
-        )}
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-0 z-[1] h-full w-[42vw]"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.45) 68%, rgba(0, 0, 0, 0) 100%)",
+          }}
+        />
+
+        <div className="relative z-10 flex h-full min-h-[100svh] items-center">
+          <div className="ml-[5.5vw] w-[min(42vw,720px)] max-w-[720px]">
+            <SceneTextContent
+              scene={scene}
+              accent={accent}
+              isInView={isInView}
+              lastLineIndex={lastLineIndex}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Left readability gradient — mobile */}
-      <div
-        className="absolute inset-y-0 left-0 w-[70%] md:hidden"
-        style={{
-          background:
-            "linear-gradient(to right, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.75) 35%, transparent 70%)",
-        }}
-      />
+      {/* Mobile: left-right split */}
+      <div className="flex h-full min-h-[100svh] w-full min-w-0 flex-row md:hidden">
+        <div
+          className="relative flex h-full min-h-[100svh] w-[42vw] min-w-0 shrink-0 items-center overflow-hidden px-7"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0, 0, 0, 0.68) 0%, rgba(0, 0, 0, 0.98) 50%, rgba(0, 0, 0, 0.68) 100%)",
+          }}
+        >
+          <div className="min-w-0 w-full">
+            <SceneTextContent
+              scene={scene}
+              accent={accent}
+              isInView={isInView}
+              lastLineIndex={lastLineIndex}
+            />
+          </div>
+        </div>
 
-      {/* Left readability gradient — desktop: near-black left, fade by ~48vw */}
-      <div
-        className="absolute inset-y-0 left-0 hidden w-[52%] md:block"
-        style={{
-          background:
-            "linear-gradient(to right, rgba(0, 0, 0, 0.97) 0%, rgba(0, 0, 0, 0.92) 18%, rgba(0, 0, 0, 0.72) 38%, rgba(0, 0, 0, 0.25) 46%, transparent 52%)",
-        }}
-      />
+        <div
+          aria-hidden="true"
+          className="w-[2px] shrink-0 self-stretch"
+          style={getMobileVerticalDividerStyle(scene.accent)}
+        />
 
-      {/* Subtle full-scene darkening — desktop, left-weighted */}
-      <div className="absolute inset-0 hidden bg-gradient-to-r from-black/25 via-black/10 to-transparent md:block" />
-
-      {/* Mobile: stronger overlay */}
-      <div className="absolute inset-0 bg-black/30 md:bg-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 md:from-black/50" />
-
-      {/* Left text block */}
-      <div className="relative z-10 flex h-full items-center px-6 pt-20 pb-12 md:px-0 md:pt-20 md:pb-16">
-        <div className="w-full max-w-[300px] -translate-y-6 md:absolute md:left-[5.5vw] md:max-w-[380px] md:-translate-y-10">
-          <motion.p
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUpVariants}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className={`mb-3 text-xs tracking-[0.3em] uppercase md:mb-5 md:text-[0.95rem] md:tracking-[0.32em] ${accent.label}`}
-          >
-            {scene.label}
-          </motion.p>
-
-          <motion.div
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUpVariants}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className={`mb-5 h-px w-[29px] md:mb-7 md:w-[36px] ${accent.divider}`}
-          />
-
-          <motion.h2
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUpVariants}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="mb-4 text-[clamp(1.75rem,6vw,2.625rem)] leading-[clamp(1.625rem,5.8vw,2.5rem)] tracking-[1px] uppercase md:mb-6 md:text-[clamp(3.8rem,4.8vw,5.8rem)] md:leading-[0.88]"
-          >
-            {scene.titleLines.map((line, index) => (
-              <span
-                key={line}
-                className={`block ${
-                  index === lastLineIndex ? accent.lastLine : "text-white"
-                }`}
-              >
-                {line}
-              </span>
-            ))}
-          </motion.h2>
-
-          <motion.p
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUpVariants}
-            transition={{ duration: 0.7, delay: 0.35 }}
-            className="text-[8px] leading-4 tracking-[3px] text-white/55 uppercase md:text-[0.8rem] md:leading-snug md:tracking-[0.22em] md:text-white/65"
-          >
-            {scene.subtitle}
-          </motion.p>
-
-          {scene.cta && (
-            <motion.div
-              initial="hidden"
-              animate={isInView ? "visible" : "hidden"}
-              variants={fadeUpVariants}
-              transition={{ duration: 0.7, delay: 0.5 }}
-              className="mt-6 md:mt-8"
-            >
-              <motion.a
-                href="#"
-                whileHover={{ scale: 1.02, opacity: 0.9 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                className={`inline-flex items-center gap-2.5 border bg-black/40 px-5 py-2.5 text-[10px] tracking-[0.2em] text-white uppercase transition-colors ${accent.ctaBorder}`}
-              >
-                {scene.cta}
-                <CtaArrow />
-              </motion.a>
-            </motion.div>
+        <div className="relative min-h-[100svh] min-w-0 flex-1">
+          {scene.mobileImage && (
+            <Image
+              src={scene.mobileImage}
+              alt=""
+              fill
+              priority={scene.id <= 2}
+              sizes="100vw"
+              className="object-cover object-center"
+            />
           )}
         </div>
       </div>

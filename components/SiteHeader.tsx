@@ -8,10 +8,10 @@ export default function SiteHeader() {
         <Image
           src="/images/smme-logo.png"
           alt="SMM Entertainment"
-          width={160}
-          height={38}
+          width={220}
+          height={56}
           priority
-          className="h-[30px] w-auto md:h-[38px]"
+          className="h-[30px] w-auto md:h-auto md:w-[100px]"
         />
       </div>
     </header>

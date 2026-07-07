@@ -9,6 +9,7 @@ export type SceneItem = {
   mobileImage?: string;
   accent: SceneAccent;
   cta?: string;
+  subtitleAccentPrefix?: string;
 };
 
 export const scenes: SceneItem[] = [
@@ -53,6 +54,7 @@ export const scenes: SceneItem[] = [
     label: "SCENE 05",
     titleLines: ["YOUR STORY", "STARTS HERE."],
     subtitle: "NEXT STAGE IS WAITING FOR YOU.",
+    subtitleAccentPrefix: "NEXT STAGE IS",
     image: "/images/scenes/scene-05.jpg",
     mobileImage: "/images/scenes/mobile/scene-05-mobile.png",
     accent: "purple",

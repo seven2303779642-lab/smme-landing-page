@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { scenes } from "@/data/scenes";
 
 type SceneIndicatorProps = {
@@ -9,6 +9,8 @@ type SceneIndicatorProps = {
 
 export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
   const [activeId, setActiveId] = useState(1);
+  const [lineTop, setLineTop] = useState(0);
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
     const sections = Array.from(
@@ -54,12 +56,39 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  useLayoutEffect(() => {
+    const updateLinePosition = () => {
+      const activeButton = buttonRefs.current[activeId - 1];
+
+      if (!activeButton) {
+        return;
+      }
+
+      setLineTop(activeButton.offsetTop + activeButton.offsetHeight / 2);
+    };
+
+    updateLinePosition();
+    window.addEventListener("resize", updateLinePosition);
+
+    return () => window.removeEventListener("resize", updateLinePosition);
+  }, [activeId]);
+
+  const activeScene = scenes[activeId - 1];
+  const isActiveGold = activeScene?.accent === "gold";
+
   return (
     <aside
       aria-label="Scene navigation"
-      className="fixed top-0 right-0 z-40 hidden h-screen w-12 bg-black md:flex md:w-20"
+      className="fixed top-0 right-0 z-40 hidden h-screen w-12 bg-black md:flex md:w-[88px]"
     >
-      <nav className="flex w-full flex-col items-center justify-center gap-7">
+      <nav className="relative flex w-full flex-col items-center justify-center gap-8">
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute top-0 left-0 h-px w-5 transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isActiveGold ? "bg-gold" : "bg-purple-accent"
+          }`}
+          style={{ transform: `translateY(${lineTop}px)` }}
+        />
         {Array.from({ length: sceneCount }, (_, index) => {
           const id = index + 1;
           const scene = scenes[index];
@@ -69,26 +98,28 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
           return (
             <button
               key={id}
+              ref={(node) => {
+                buttonRefs.current[index] = node;
+              }}
               type="button"
               aria-label={`Go to scene ${String(id).padStart(2, "0")}`}
               aria-current={isActive ? "true" : undefined}
               onClick={() => scrollToSection(id)}
-              className="group relative flex h-7 w-full items-center justify-center"
+              className="group relative flex h-7 w-full items-center justify-center transition-transform duration-200 active:scale-95"
             >
-              {isActive && (
-                <span
-                  className={`absolute top-1/2 left-0 h-px w-5 -translate-y-1/2 ${
-                    isGold ? "bg-gold" : "bg-purple-accent"
-                  }`}
-                />
-              )}
               <span
-                className={`text-[11px] tracking-[0.08em] transition-colors duration-300 md:text-[13px] ${
+                aria-hidden="true"
+                className={`absolute top-1/2 left-0 h-px w-4 -translate-y-1/2 opacity-0 transition-[opacity,background-color,transform] duration-300 group-hover:scale-x-110 group-hover:opacity-60 ${
+                  isGold ? "bg-gold" : "bg-purple-accent"
+                } ${isActive ? "hidden" : ""}`}
+              />
+              <span
+                className={`text-[11px] font-medium tracking-[0.12em] transition-[color,transform] duration-300 group-hover:scale-105 md:text-[1.15rem] ${
                   isActive
                     ? isGold
                       ? "text-gold"
                       : "text-purple-accent"
-                    : "text-white/40 group-hover:text-white/60"
+                    : "text-white/50 group-hover:text-white/70"
                 }`}
               >
                 {String(id).padStart(2, "0")}
