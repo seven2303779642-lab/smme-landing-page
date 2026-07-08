@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { SceneItem } from "@/data/scenes";
 import { getSceneAccentClasses } from "@/data/scenes";
 import { useSceneScroll } from "@/context/SceneScrollContext";
+import SceneCopyright from "./SceneCopyright";
 
 type SceneSectionProps = {
   scene: SceneItem;
@@ -209,6 +210,8 @@ export default function SceneSection({ scene }: SceneSectionProps) {
           )}
         </div>
       </div>
+
+      <SceneCopyright />
     </section>
   );
 }

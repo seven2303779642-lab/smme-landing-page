@@ -1,6 +1,5 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
 import { getSceneAccentClasses, scenes } from "@/data/scenes";
 import { useSceneScroll } from "@/context/SceneScrollContext";
 
@@ -10,44 +9,13 @@ type SceneIndicatorProps = {
 
 export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
   const { currentIndex, goTo } = useSceneScroll();
-  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const lineTopRef = useRef(0);
-  const lineRef = useRef<HTMLSpanElement>(null);
-
-  useLayoutEffect(() => {
-    const updateLinePosition = () => {
-      const activeButton = buttonRefs.current[currentIndex];
-
-      if (!activeButton || !lineRef.current) {
-        return;
-      }
-
-      lineTopRef.current =
-        activeButton.offsetTop + activeButton.offsetHeight / 2;
-      lineRef.current.style.transform = `translateY(${lineTopRef.current}px)`;
-    };
-
-    updateLinePosition();
-    window.addEventListener("resize", updateLinePosition);
-
-    return () => window.removeEventListener("resize", updateLinePosition);
-  }, [currentIndex]);
-
-  const activeScene = scenes[currentIndex];
-  const activeAccent = getSceneAccentClasses(activeScene?.accent ?? "purple");
 
   return (
     <aside
       aria-label="Scene navigation"
       className="fixed top-0 right-0 z-40 hidden h-screen w-12 bg-black md:flex md:w-[88px]"
     >
-      <nav className="relative flex w-full flex-col items-center justify-center gap-8">
-        <span
-          ref={lineRef}
-          aria-hidden="true"
-          className={`pointer-events-none absolute top-0 left-0 h-px w-5 transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${activeAccent.indicatorBg}`}
-          style={{ transform: `translateY(${lineTopRef.current}px)` }}
-        />
+      <nav className="flex w-full flex-col items-center justify-center gap-8">
         {Array.from({ length: sceneCount }, (_, index) => {
           const id = index + 1;
           const scene = scenes[index];
@@ -57,19 +25,12 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
           return (
             <button
               key={id}
-              ref={(node) => {
-                buttonRefs.current[index] = node;
-              }}
               type="button"
               aria-label={`Go to scene ${String(id).padStart(2, "0")}`}
               aria-current={isActive ? "true" : undefined}
               onClick={() => goTo(index)}
-              className="group relative flex h-7 w-full items-center justify-center transition-transform duration-200 active:scale-95"
+              className="group flex flex-col items-center py-1 transition-transform duration-200 active:scale-95"
             >
-              <span
-                aria-hidden="true"
-                className={`absolute top-1/2 left-0 h-px w-4 -translate-y-1/2 opacity-0 transition-[opacity,background-color,transform] duration-300 group-hover:scale-x-110 group-hover:opacity-60 ${sceneAccent.indicatorBg} ${isActive ? "hidden" : ""}`}
-              />
               <span
                 className={`text-[11px] font-medium tracking-[0.12em] transition-[color,transform] duration-300 group-hover:scale-105 md:text-[1.15rem] ${
                   isActive
@@ -79,6 +40,14 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
               >
                 {String(id).padStart(2, "0")}
               </span>
+              <span
+                aria-hidden="true"
+                className={`mt-2 h-1.5 w-1.5 rounded-full transition-[background-color,transform] duration-300 group-hover:scale-110 md:h-2 md:w-2 ${
+                  isActive
+                    ? sceneAccent.indicatorBg
+                    : "bg-white/50 group-hover:bg-white/70"
+                }`}
+              />
             </button>
           );
         })}
