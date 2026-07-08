@@ -38,7 +38,7 @@ export default function ScrollDownHint() {
         opacity: { duration: 0.5 },
         y: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
       }}
-      className="pointer-events-auto fixed bottom-[14vh] left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2 text-[clamp(14px,1.1vw,18px)] tracking-[0.24em] text-white/55 uppercase md:bottom-[12vh] md:tracking-[0.28em]"
+      className="pointer-events-auto fixed bottom-[10vh] left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2 text-[clamp(14px,1.1vw,18px)] tracking-[0.24em] text-white/55 uppercase md:bottom-[7vh] md:tracking-[0.28em]"
     >
       <span>SCROLL DOWN</span>
       <DownArrow />
