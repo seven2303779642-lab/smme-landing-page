@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 import type { SceneItem } from "@/data/scenes";
+import { useSceneScroll } from "@/context/SceneScrollContext";
 
 type SceneSectionProps = {
   scene: SceneItem;
@@ -29,6 +29,8 @@ function getAccentClasses(accent: SceneItem["accent"]) {
       lastLine: "text-gold",
       subtitle: "text-white/55 md:text-white/65",
       ctaBorder: "border-gold/50 hover:border-gold hover:bg-gold/10",
+      mobileDivider:
+        "bg-[linear-gradient(to_bottom,rgba(196,163,90,0)_0%,rgba(196,163,90,1)_14%,rgba(196,163,90,1)_86%,rgba(196,163,90,0)_100%)]",
     };
   }
 
@@ -39,14 +41,8 @@ function getAccentClasses(accent: SceneItem["accent"]) {
     subtitle: "text-purple-accent",
     ctaBorder:
       "border-purple-accent/50 hover:border-purple-accent hover:bg-purple-accent/10",
-  };
-}
-
-function getMobileVerticalDividerStyle(accent: SceneItem["accent"]) {
-  const rgb = accent === "gold" ? "196, 163, 90" : "168, 85, 247";
-
-  return {
-    background: `linear-gradient(to bottom, rgba(${rgb}, 0) 0%, rgba(${rgb}, 1) 14%, rgba(${rgb}, 1) 86%, rgba(${rgb}, 0) 100%)`,
+    mobileDivider:
+      "bg-[linear-gradient(to_bottom,rgba(168,85,247,0)_0%,rgba(168,85,247,1)_14%,rgba(168,85,247,1)_86%,rgba(168,85,247,0)_100%)]",
   };
 }
 
@@ -166,52 +162,15 @@ function SceneTextContent({
 }
 
 export default function SceneSection({ scene }: SceneSectionProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [isInView, setIsInView] = useState(false);
+  const { currentIndex } = useSceneScroll();
   const accent = getAccentClasses(scene.accent);
   const lastLineIndex = scene.titleLines.length - 1;
-
-  useEffect(() => {
-    const node = sectionRef.current;
-
-    if (!node) {
-      return;
-    }
-
-    const syncInView = () => {
-      const rect = node.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      if (rect.top < viewportHeight * 0.75 && rect.bottom > viewportHeight * 0.25) {
-        setIsInView(true);
-      }
-    };
-
-    syncInView();
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-        }
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(node);
-    window.addEventListener("resize", syncInView);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", syncInView);
-    };
-  }, []);
+  const isInView = currentIndex === scene.id - 1;
 
   return (
     <section
-      ref={sectionRef}
       data-scene-id={scene.id}
-      className="relative h-screen min-h-[100svh] snap-always snap-start overflow-hidden bg-black"
+      className="relative h-screen min-h-[100svh] overflow-hidden bg-black"
     >
       {/* Desktop */}
       <div className="relative hidden h-full min-h-[100svh] md:block">
@@ -226,11 +185,7 @@ export default function SceneSection({ scene }: SceneSectionProps) {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-0 z-[1] h-full w-[42vw]"
-          style={{
-            background:
-              "linear-gradient(to right, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.45) 68%, rgba(0, 0, 0, 0) 100%)",
-          }}
+          className="pointer-events-none absolute top-0 left-0 z-[1] h-full w-[42vw] bg-[linear-gradient(to_right,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.88)_34%,rgba(0,0,0,0.45)_68%,rgba(0,0,0,0)_100%)]"
         />
 
         <div className="relative z-10 flex h-full min-h-[100svh] items-center">
@@ -247,13 +202,7 @@ export default function SceneSection({ scene }: SceneSectionProps) {
 
       {/* Mobile: left-right split */}
       <div className="flex h-full min-h-[100svh] w-full min-w-0 flex-row md:hidden">
-        <div
-          className="relative flex h-full min-h-[100svh] w-[42vw] min-w-0 shrink-0 items-center overflow-hidden px-7"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(0, 0, 0, 0.68) 0%, rgba(0, 0, 0, 0.98) 50%, rgba(0, 0, 0, 0.68) 100%)",
-          }}
-        >
+        <div className="relative flex h-full min-h-[100svh] w-[42vw] min-w-0 shrink-0 items-center overflow-hidden bg-[linear-gradient(to_bottom,rgba(0,0,0,0.68)_0%,rgba(0,0,0,0.98)_50%,rgba(0,0,0,0.68)_100%)] px-7">
           <div className="min-w-0 w-full">
             <SceneTextContent
               scene={scene}
@@ -266,8 +215,7 @@ export default function SceneSection({ scene }: SceneSectionProps) {
 
         <div
           aria-hidden="true"
-          className="w-[2px] shrink-0 self-stretch"
-          style={getMobileVerticalDividerStyle(scene.accent)}
+          className={`w-[2px] shrink-0 self-stretch ${accent.mobileDivider}`}
         />
 
         <div className="relative min-h-[100svh] min-w-0 flex-1">

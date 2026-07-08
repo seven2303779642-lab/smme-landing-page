@@ -1,79 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { scenes } from "@/data/scenes";
+import { useSceneScroll } from "@/context/SceneScrollContext";
 
 type SceneIndicatorProps = {
   sceneCount: number;
 };
 
 export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
-  const [activeId, setActiveId] = useState(1);
-  const [lineTop, setLineTop] = useState(0);
+  const { currentIndex, goTo } = useSceneScroll();
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
-  useEffect(() => {
-    const sections = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-scene-id]"),
-    );
-
-    if (sections.length === 0) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        if (visible.length === 0) {
-          return;
-        }
-
-        const id = Number(visible[0].target.getAttribute("data-scene-id"));
-
-        if (!Number.isNaN(id)) {
-          setActiveId(id);
-        }
-      },
-      {
-        root: null,
-        threshold: [0.35, 0.5, 0.65],
-      },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scrollToSection = useCallback((id: number) => {
-    const target = document.querySelector<HTMLElement>(
-      `[data-scene-id="${id}"]`,
-    );
-
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  const lineTopRef = useRef(0);
+  const lineRef = useRef<HTMLSpanElement>(null);
 
   useLayoutEffect(() => {
     const updateLinePosition = () => {
-      const activeButton = buttonRefs.current[activeId - 1];
+      const activeButton = buttonRefs.current[currentIndex];
 
-      if (!activeButton) {
+      if (!activeButton || !lineRef.current) {
         return;
       }
 
-      setLineTop(activeButton.offsetTop + activeButton.offsetHeight / 2);
+      lineTopRef.current =
+        activeButton.offsetTop + activeButton.offsetHeight / 2;
+      lineRef.current.style.transform = `translateY(${lineTopRef.current}px)`;
     };
 
     updateLinePosition();
     window.addEventListener("resize", updateLinePosition);
 
     return () => window.removeEventListener("resize", updateLinePosition);
-  }, [activeId]);
+  }, [currentIndex]);
 
-  const activeScene = scenes[activeId - 1];
+  const activeScene = scenes[currentIndex];
   const isActiveGold = activeScene?.accent === "gold";
 
   return (
@@ -83,16 +43,17 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
     >
       <nav className="relative flex w-full flex-col items-center justify-center gap-8">
         <span
+          ref={lineRef}
           aria-hidden="true"
           className={`pointer-events-none absolute top-0 left-0 h-px w-5 transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isActiveGold ? "bg-gold" : "bg-purple-accent"
           }`}
-          style={{ transform: `translateY(${lineTop}px)` }}
+          style={{ transform: `translateY(${lineTopRef.current}px)` }}
         />
         {Array.from({ length: sceneCount }, (_, index) => {
           const id = index + 1;
           const scene = scenes[index];
-          const isActive = activeId === id;
+          const isActive = currentIndex === index;
           const isGold = scene?.accent === "gold";
 
           return (
@@ -104,7 +65,7 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
               type="button"
               aria-label={`Go to scene ${String(id).padStart(2, "0")}`}
               aria-current={isActive ? "true" : undefined}
-              onClick={() => scrollToSection(id)}
+              onClick={() => goTo(index)}
               className="group relative flex h-7 w-full items-center justify-center transition-transform duration-200 active:scale-95"
             >
               <span

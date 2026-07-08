@@ -3,60 +3,27 @@
 @theme inline {
   --color-gold: #c4a35a;
   --color-gold-muted: #8a7344;
-  --color-purple: #a855f7;
+  --color-purple-accent: #a855f7;
   --color-purple-muted: #7c3aed;
-  --font-display: var(--font-bebas);
-  --font-body: var(--font-bebas);
 }
 
 @layer base {
-  html {
+  html,
+  body {
     background-color: #000;
     color: #fff;
-    scroll-behavior: smooth;
-    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   body {
-    font-family: var(--font-bebas), sans-serif;
     overflow-x: hidden;
-  }
-}
-
-@layer utilities {
-  .font-display {
-    font-family: var(--font-display), sans-serif;
-  }
-
-  .font-body {
-    font-family: var(--font-body), sans-serif;
-  }
-
-  .snap-always {
-    scroll-snap-stop: always;
-  }
-
-  .text-gold {
-    color: var(--color-gold);
-  }
-
-  .text-purple-accent {
-    color: var(--color-purple);
-  }
-
-  .bg-gold {
-    background-color: var(--color-gold);
-  }
-
-  .bg-purple-accent {
-    background-color: var(--color-purple);
-  }
-
-  .border-gold {
-    border-color: var(--color-gold-muted);
-  }
-
-  .border-purple-accent {
-    border-color: var(--color-purple);
   }
 }
