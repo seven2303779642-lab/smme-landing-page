@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { SceneItem } from "@/data/scenes";
+import { getSceneAccentClasses } from "@/data/scenes";
 import { useSceneScroll } from "@/context/SceneScrollContext";
 
 type SceneSectionProps = {
@@ -11,7 +12,7 @@ type SceneSectionProps = {
 
 type SceneTextContentProps = {
   scene: SceneItem;
-  accent: ReturnType<typeof getAccentClasses>;
+  accent: ReturnType<typeof getSceneAccentClasses>;
   isInView: boolean;
   lastLineIndex: number;
 };
@@ -20,31 +21,6 @@ const fadeUpVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 };
-
-function getAccentClasses(accent: SceneItem["accent"]) {
-  if (accent === "gold") {
-    return {
-      label: "text-gold",
-      divider: "bg-gold",
-      lastLine: "text-gold",
-      subtitle: "text-white/55 md:text-white/65",
-      ctaBorder: "border-gold/50 hover:border-gold hover:bg-gold/10",
-      mobileDivider:
-        "bg-[linear-gradient(to_bottom,rgba(196,163,90,0)_0%,rgba(196,163,90,1)_14%,rgba(196,163,90,1)_86%,rgba(196,163,90,0)_100%)]",
-    };
-  }
-
-  return {
-    label: "text-purple-accent",
-    divider: "bg-purple-accent",
-    lastLine: "text-purple-accent",
-    subtitle: "text-purple-accent",
-    ctaBorder:
-      "border-purple-accent/50 hover:border-purple-accent hover:bg-purple-accent/10",
-    mobileDivider:
-      "bg-[linear-gradient(to_bottom,rgba(168,85,247,0)_0%,rgba(168,85,247,1)_14%,rgba(168,85,247,1)_86%,rgba(168,85,247,0)_100%)]",
-  };
-}
 
 function CtaArrow() {
   return (
@@ -142,7 +118,9 @@ function SceneTextContent({
           className="mt-6 md:mt-8"
         >
           <motion.a
-            href="#"
+            href={scene.ctaHref ?? "#"}
+            target={scene.ctaHref ? "_blank" : undefined}
+            rel={scene.ctaHref ? "noopener noreferrer" : undefined}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.2 }}
@@ -163,7 +141,7 @@ function SceneTextContent({
 
 export default function SceneSection({ scene }: SceneSectionProps) {
   const { currentIndex } = useSceneScroll();
-  const accent = getAccentClasses(scene.accent);
+  const accent = getSceneAccentClasses(scene.accent);
   const lastLineIndex = scene.titleLines.length - 1;
   const isInView = currentIndex === scene.id - 1;
 

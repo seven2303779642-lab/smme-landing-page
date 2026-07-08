@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { scenes } from "@/data/scenes";
+import { getSceneAccentClasses, scenes } from "@/data/scenes";
 import { useSceneScroll } from "@/context/SceneScrollContext";
 
 type SceneIndicatorProps = {
@@ -34,7 +34,7 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
   }, [currentIndex]);
 
   const activeScene = scenes[currentIndex];
-  const isActiveGold = activeScene?.accent === "gold";
+  const activeAccent = getSceneAccentClasses(activeScene?.accent ?? "purple");
 
   return (
     <aside
@@ -45,16 +45,14 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
         <span
           ref={lineRef}
           aria-hidden="true"
-          className={`pointer-events-none absolute top-0 left-0 h-px w-5 transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isActiveGold ? "bg-gold" : "bg-purple-accent"
-          }`}
+          className={`pointer-events-none absolute top-0 left-0 h-px w-5 transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${activeAccent.indicatorBg}`}
           style={{ transform: `translateY(${lineTopRef.current}px)` }}
         />
         {Array.from({ length: sceneCount }, (_, index) => {
           const id = index + 1;
           const scene = scenes[index];
           const isActive = currentIndex === index;
-          const isGold = scene?.accent === "gold";
+          const sceneAccent = getSceneAccentClasses(scene?.accent ?? "purple");
 
           return (
             <button
@@ -70,16 +68,12 @@ export default function SceneIndicator({ sceneCount }: SceneIndicatorProps) {
             >
               <span
                 aria-hidden="true"
-                className={`absolute top-1/2 left-0 h-px w-4 -translate-y-1/2 opacity-0 transition-[opacity,background-color,transform] duration-300 group-hover:scale-x-110 group-hover:opacity-60 ${
-                  isGold ? "bg-gold" : "bg-purple-accent"
-                } ${isActive ? "hidden" : ""}`}
+                className={`absolute top-1/2 left-0 h-px w-4 -translate-y-1/2 opacity-0 transition-[opacity,background-color,transform] duration-300 group-hover:scale-x-110 group-hover:opacity-60 ${sceneAccent.indicatorBg} ${isActive ? "hidden" : ""}`}
               />
               <span
                 className={`text-[11px] font-medium tracking-[0.12em] transition-[color,transform] duration-300 group-hover:scale-105 md:text-[1.15rem] ${
                   isActive
-                    ? isGold
-                      ? "text-gold"
-                      : "text-purple-accent"
+                    ? sceneAccent.indicatorText
                     : "text-white/50 group-hover:text-white/70"
                 }`}
               >
