@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { SceneItem } from "@/data/scenes";
@@ -22,6 +23,19 @@ const fadeUpVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 };
+
+const SCENE_3_IMAGE_FOCUS = {
+  x: "70%",
+  y: "50%",
+} as const;
+
+function getSceneImageClassName(sceneId: number) {
+  if (sceneId === 3) {
+    return "object-cover [object-position:var(--scene3-image-focus-x)_var(--scene3-image-focus-y)]";
+  }
+
+  return "object-cover object-center";
+}
 
 function CtaArrow() {
   return (
@@ -145,11 +159,20 @@ export default function SceneSection({ scene }: SceneSectionProps) {
   const accent = getSceneAccentClasses(scene.accent);
   const lastLineIndex = scene.titleLines.length - 1;
   const isInView = currentIndex === scene.id - 1;
+  const isScene3 = scene.id === 3;
 
   return (
     <section
       data-scene-id={scene.id}
       className="relative h-screen min-h-[100svh] overflow-hidden bg-black"
+      style={
+        isScene3
+          ? ({
+              "--scene3-image-focus-x": SCENE_3_IMAGE_FOCUS.x,
+              "--scene3-image-focus-y": SCENE_3_IMAGE_FOCUS.y,
+            } as CSSProperties)
+          : undefined
+      }
     >
       {/* Desktop */}
       <div className="relative hidden h-full min-h-[100svh] md:block">
@@ -159,7 +182,7 @@ export default function SceneSection({ scene }: SceneSectionProps) {
           fill
           priority={scene.id <= 2}
           sizes="100vw"
-          className="object-cover object-center"
+          className={getSceneImageClassName(scene.id)}
         />
 
         <div
@@ -205,7 +228,7 @@ export default function SceneSection({ scene }: SceneSectionProps) {
               fill
               priority={scene.id <= 2}
               sizes="100vw"
-              className="object-cover object-center"
+              className={getSceneImageClassName(scene.id)}
             />
           )}
         </div>
