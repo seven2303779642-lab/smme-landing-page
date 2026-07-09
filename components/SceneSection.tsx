@@ -25,7 +25,7 @@ const fadeUpVariants = {
 };
 
 const SCENE_3_IMAGE_FOCUS = {
-  x: "70%",
+  x: "100%",
   y: "50%",
 } as const;
 

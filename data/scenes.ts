@@ -13,8 +13,6 @@ export type SceneItem = {
   subtitleAccentPrefix?: string;
 };
 
-const MAGENTA_RGB = "183, 27, 143";
-
 export function getSceneAccentClasses(accent: SceneAccent) {
   if (accent === "gold") {
     return {
@@ -40,7 +38,8 @@ export function getSceneAccentClasses(accent: SceneAccent) {
         "border-magenta-accent/50 hover:border-magenta-accent hover:bg-magenta-accent/10",
       indicatorBg: "bg-magenta-accent",
       indicatorText: "text-magenta-accent",
-      mobileDivider: `bg-[linear-gradient(to_bottom,rgba(${MAGENTA_RGB},0)_0%,rgba(${MAGENTA_RGB},1)_14%,rgba(${MAGENTA_RGB},1)_86%,rgba(${MAGENTA_RGB},0)_100%)]`,
+      mobileDivider:
+        "bg-[linear-gradient(to_bottom,rgba(183,27,143,0)_0%,rgba(183,27,143,1)_14%,rgba(183,27,143,1)_86%,rgba(183,27,143,0)_100%)]",
     };
   }
 
